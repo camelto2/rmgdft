@@ -2342,6 +2342,8 @@ template <class T> void Exxbase<T>::write_basics(hid_t h_group, int_2d_array QKt
     dims[5] = ct.nel_down * dims[2];
     dims[7] = 0;
 
+    std::cout << "NEL: " << ct.nel << " " << ct.nel_up << " " << ct.nel_down << std::endl;
+
     writeNumsToHDF("dims", dims, h_group);
 
     std::vector<double> Energies;
