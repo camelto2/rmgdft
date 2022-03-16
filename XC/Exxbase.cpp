@@ -2338,8 +2338,8 @@ template <class T> void Exxbase<T>::write_basics(hid_t h_group, int_2d_array QKt
     dims.resize(8, 0);
     dims[2] = ct.klist.num_k_all;
     dims[3] = ct.qmc_nband * dims[2];
-    dims[4] = ct.qmc_nband;
-    dims[5] = ct.qmc_nband;
+    dims[4] = ct.nel_up * dims[2];
+    dims[5] = ct.nel_down * dims[2];
     dims[7] = 0;
 
     writeNumsToHDF("dims", dims, h_group);
