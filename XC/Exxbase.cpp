@@ -1001,7 +1001,7 @@ template <class T> void Exxbase<T>::GetKptOccs(std::vector<std::vector<double>>&
         for (int ib = 0; ib < ct.qmc_nband; ib++) {
             std::string wfname(ct.infile);
             wfname += "_spin" + std::to_string(spinidx) + "_kpt" + std::to_string(ik) + "_wf" + std::to_string(ib);
-            double occ = ReadEigOcc<T>(wfname);
+            double occ = ReadEigOcc(wfname);
             nel_spin += occ;
             kpt_occs[ik][ib] = occ;
         }
