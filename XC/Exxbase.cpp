@@ -975,9 +975,11 @@ template <> void Exxbase<double>::Vexx_integrals_block(FILE *fp,  int ij_start, 
     delete RT0;
 }
 
-double Exxbase::ReadEigOcc(std::string& wfname)
+template <> double Exxbase<double>::ReadEigOcc(sstd::string& wfname);
+template <> double Exxbase<std::complex<double>>::ReagEigOcc(sstd::string& wfname);
+template<class T> double Exxbase<T>::ReadEigOcc(std::string& wfname)
 {
-    OrbitalHeader H
+    OrbitalHeader H;
     int fhand = open(wfname.c_str(), O_RDWR, S_IREADS | S_WRITE);
     if (fhand < 0) {
         rmg_printf("Can't open restart file %s", wfname.c_str());
@@ -989,7 +991,9 @@ double Exxbase::ReadEigOcc(std::string& wfname)
     return H.occ;
 }
 
-void Exxbase::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx) 
+template <> void Exxbase<double>::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx);
+template <> void Exxbase<std::complex<double>>::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx);
+template <class T> void Exxbase<T>::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx) 
 {
     assert(kpt_occs.size() == ct.klist.num_k_all);
     assert(kpt_occs[0].size() == ct.qmc_nband);
