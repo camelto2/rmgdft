@@ -975,8 +975,8 @@ template <> void Exxbase<double>::Vexx_integrals_block(FILE *fp,  int ij_start, 
     delete RT0;
 }
 
-template <> double Exxbase<double>::ReadEigOcc(std::string& wfname);
-template <> double Exxbase<std::complex<double>>::ReadEigOcc(std::string& wfname);
+template double Exxbase<double>::ReadEigOcc(std::string& wfname);
+template double Exxbase<std::complex<double>>::ReadEigOcc(std::string& wfname);
 template<class T> double Exxbase<T>::ReadEigOcc(std::string& wfname)
 {
     OrbitalHeader H;
@@ -991,13 +991,13 @@ template<class T> double Exxbase<T>::ReadEigOcc(std::string& wfname)
     return H.occ;
 }
 
-template <> void Exxbase<double>::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx);
-template <> void Exxbase<std::complex<double>>::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx);
+template void Exxbase<double>::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx);
+template void Exxbase<std::complex<double>>::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx);
 template <class T> void Exxbase<T>::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx) 
 {
-    assert(kpt_occs.size() == ct.klist.num_k_all);
-    assert(kpt_occs[0].size() == ct.qmc_nband);
+    kpt_occs.resize(ct.klist.num_k_all);
     for (int ik = 0; ik < ct.klist.num_k_all; ik++) {
+        kpt_occs[ik].resize(ct.qmc_nband);
         for (int ib = 0; ib < ct.qmc_nband; ib++) {
             std::string wfname(ct.infile);
             wfname += "_spin" + std::to_string(spinidx) + "_kpt" + std::to_string(ik) + "_wf" + std::to_string(ib);
@@ -1319,17 +1319,25 @@ template <> void Exxbase<std::complex<double>>::Vexx_integrals(std::string &hdf_
         //first read the occcupations. used to count electrons and define TWF
         double nel_up = 0;
         double nel_down = 0;
-        std::vector<std::vector<double>> kpt_occs_up(nkpts, std::vector<double>(ct.qmc_nband, 0.0));
+        std::vector<std::vector<double>> kpt_occs_up, kpt_occs_down;
         GetKptOccs(kpt_occs_up, nel_up, 0);
-        std::cout << "Spins: " << nel_up << std::endl;
-
+        if (ct.nspin == 1) {
+           nel_up *= 0.5;
+           nel_down = nel_up;
+        }
+        else
+          GetKptOccs(kpt_occs_down, nel_down, 1);
+        nel_up /= static_cast<double>(ct.klist.num_k_all);
+        nel_down /= static_cast<double>(ct.klist.num_k_all);
+        int nup = static_cast<int>(std::floor(nel_up+0.1));
+        int ndown = static_cast<int>(std::floor(nel_down+0.1));
 
         remove(hdf_filename.c_str());
         h5file = H5Fcreate(hdf_filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
         hamil_group = makeHDFGroup("Hamiltonian", h5file);
         wf_group = makeHDFGroup("Wavefunction", h5file);
         kpf_group = makeHDFGroup("KPFactorized", hamil_group);
-        write_basics(hamil_group, QKtoK2, kminus);
+        write_basics(hamil_group, QKtoK2, kminus, nup, ndown);
         write_waves_afqmc(wf_group);
     }
     int Ncho_max = ct.exxchol_max * ct.qmc_nband * nkpts;
@@ -2369,19 +2377,17 @@ template <class T> void Exxbase<T>::SetHcore(T *Hij, T *Hij_kin, int lda)
 
 }
 
-template void Exxbase<double>::write_basics(hid_t h_group, int_2d_array QKtoK2, std::vector<int> kminus);
-template void Exxbase<std::complex<double>>::write_basics(hid_t h_group, int_2d_array QKtoK2, std::vector<int> kminus);
-template <class T> void Exxbase<T>::write_basics(hid_t h_group, int_2d_array QKtoK2, std::vector<int> kminus)
+template void Exxbase<double>::write_basics(hid_t h_group, int_2d_array QKtoK2, std::vector<int> kminus, int nel_up, int nel_down);
+template void Exxbase<std::complex<double>>::write_basics(hid_t h_group, int_2d_array QKtoK2, std::vector<int> kminus, int nel_up, int nel_down);
+template <class T> void Exxbase<T>::write_basics(hid_t h_group, int_2d_array QKtoK2, std::vector<int> kminus, int nel_up, int nel_down)
 {
     std::vector<int> dims;
     dims.resize(8, 0);
     dims[2] = ct.klist.num_k_all;
     dims[3] = ct.qmc_nband * dims[2];
-    dims[4] = ct.nel_up * dims[2];
-    dims[5] = ct.nel_down * dims[2];
+    dims[4] = nel_up * dims[2];
+    dims[5] = nel_down * dims[2];
     dims[7] = 0;
-
-    std::cout << "NEL: " << ct.nel << " " << ct.nel_up << " " << ct.nel_down << std::endl;
 
     writeNumsToHDF("dims", dims, h_group);
 
@@ -2570,7 +2576,7 @@ template <class T> void Exxbase<T>::WriteForAFQMC_gamma2complex(std::string &hdf
     kminus.resize(1, -1);
     QKtoK2[0][0] = 0;
     kminus[0] = 0;
-    write_basics(hamil_group, QKtoK2, kminus);
+    write_basics(hamil_group, QKtoK2, kminus, Nup, Ndown);
     write_waves_afqmc(wf_group);
 
     hsize_t h_dims[3];

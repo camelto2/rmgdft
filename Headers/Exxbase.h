@@ -150,7 +150,7 @@ private:
     int Vexx_int_oneQ(int iq, int_2d_array QKtoK2, std::complex<double> *Cholvec,
         std::complex<double> *phase_Gr, std::complex<double> *Xaoik, std::complex<double> *Xaolj,
         double *residual, int ij_tot, int Ncho_max, int pbasis, MPI_Comm comm);
-    void write_basics(hid_t h_grp, int_2d_array QKtoK2, std::vector<int> kminus);
+    void write_basics(hid_t h_grp, int_2d_array QKtoK2, std::vector<int> kminus, int nel_up, int nel_down);
     void write_waves_afqmc(hid_t h_grp);
     void WriteForAFQMC_gamma2complex(std::string &hdf_file, int ns_occ, int Nchol, int Nup, int Ndown,
         std::vector<double> eigs, std::vector<double> &CholVec, std::vector<double> &Hcore, std::vector<double> &Hcore_kin);
