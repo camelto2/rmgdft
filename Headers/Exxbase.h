@@ -189,6 +189,8 @@ public:
     void ReadWfsFromSingleFile(void);
     void kpoints_setup();
     void Remap(T *inbuf, T *rbuf);
+    double ReadEigOcc(std::string& wfname);
+    void GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx);
 
     // Plane wave object for local grids
     Pw *pwave;

@@ -975,6 +975,35 @@ template <> void Exxbase<double>::Vexx_integrals_block(FILE *fp,  int ij_start, 
     delete RT0;
 }
 
+double Exxbase::ReadEigOcc(std::string& wfname)
+{
+    OrbitalHeader H
+    int fhand = open(wfname.c_str(), O_RDWR, S_IREADS | S_WRITE);
+    if (fhand < 0) {
+        rmg_printf("Can't open restart file %s", wfname.c_str());
+        rmg_error_handler(__FILE__, __LINE__, "Terminating.");
+    }
+    size_t rsize = read(fhand, &H, sizeof(OrbitalHeader));
+    if (rsize != sizeof(OrbitalHeader))
+        rmg_error_handler(__FILE__, __LINE__, "error reading");
+    return H.occ;
+}
+
+void Exxbase::GetKptOccs(std::vector<std::vector<double>>& kpt_occs, double& nel_spin, const int spinidx) 
+{
+    assert(kpt_occs.size() == ct.klist.num_k_all);
+    assert(kpt_occs[0].size() == ct.qmc_nband);
+    for (int ik = 0; ik < ct.klist.num_k_all; ik++) {
+        for (int ib = 0; ib < ct.qmc_nband; ib++) {
+            std::string wfname(ct.infile);
+            wfname += "_spin" + std::to_string(spinidx) + "_kpt" + std::to_string(ik) + "_wf" + std::to_string(ib);
+            double occ = ReadEigOcc(wfname);
+            nel_spin += occ;
+            kpt_occs[ik][ib] = occ;
+        }
+    }
+}
+
 // This computes exact exchange integrals
 // and writes the result into vfile.
 template <> void Exxbase<double>::Vexx_integrals(std::string &vfile)
@@ -1283,8 +1312,14 @@ template <> void Exxbase<std::complex<double>>::Vexx_integrals(std::string &hdf_
     hid_t wf_group = 0;
     hid_t kpf_group = 0;
     if(pct.worldrank == 0) {
-    
-        hdf_filename += ".h5";
+        //first read the occcupations. used to count electrons and define TWF
+        double nel_up = 0;
+        double nel_down = 0;
+        std::vector<std::vector<double>> kpt_occs_up(nkpts, std::vector<double>(ct.qmc_nband, 0.0));
+        GetKptOccs(kpt_occs_up, nel_up, 0);
+        std::cout << "Spins: " << nel_up << std::endl;
+
+
         remove(hdf_filename.c_str());
         h5file = H5Fcreate(hdf_filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
         hamil_group = makeHDFGroup("Hamiltonian", h5file);
