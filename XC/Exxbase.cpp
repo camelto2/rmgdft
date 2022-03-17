@@ -975,12 +975,12 @@ template <> void Exxbase<double>::Vexx_integrals_block(FILE *fp,  int ij_start, 
     delete RT0;
 }
 
-template <> double Exxbase<double>::ReadEigOcc(sstd::string& wfname);
-template <> double Exxbase<std::complex<double>>::ReagEigOcc(sstd::string& wfname);
+template <> double Exxbase<double>::ReadEigOcc(std::string& wfname);
+template <> double Exxbase<std::complex<double>>::ReagEigOcc(std::string& wfname);
 template<class T> double Exxbase<T>::ReadEigOcc(std::string& wfname)
 {
     OrbitalHeader H;
-    int fhand = open(wfname.c_str(), O_RDWR, S_IREADS | S_WRITE);
+    int fhand = open(wfname.c_str(), O_RDWR, S_IREAD | S_IWRITE);
     if (fhand < 0) {
         rmg_printf("Can't open restart file %s", wfname.c_str());
         rmg_error_handler(__FILE__, __LINE__, "Terminating.");
