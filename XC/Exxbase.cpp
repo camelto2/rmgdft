@@ -976,7 +976,7 @@ template <> void Exxbase<double>::Vexx_integrals_block(FILE *fp,  int ij_start, 
 }
 
 template <> double Exxbase<double>::ReadEigOcc(std::string& wfname);
-template <> double Exxbase<std::complex<double>>::ReagEigOcc(std::string& wfname);
+template <> double Exxbase<std::complex<double>>::ReadEigOcc(std::string& wfname);
 template<class T> double Exxbase<T>::ReadEigOcc(std::string& wfname)
 {
     OrbitalHeader H;
