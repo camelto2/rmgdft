@@ -1317,6 +1317,8 @@ template <> void Exxbase<std::complex<double>>::Vexx_integrals(std::string &hdf_
     hid_t wf_group = 0;
     hid_t kpf_group = 0;
     if(pct.worldrank == 0) {
+
+        hdf_filename += ".h5";
         //first read the occcupations. used to count electrons and define TWF
         double nel_up = 0;
         double nel_down = 0;
